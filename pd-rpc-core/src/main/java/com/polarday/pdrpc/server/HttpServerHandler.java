@@ -1,10 +1,11 @@
 package com.polarday.pdrpc.server;
 
+import com.polarday.pdrpc.RpcApplication;
 import com.polarday.pdrpc.model.RpcRequest;
 import com.polarday.pdrpc.model.RpcResponse;
 import com.polarday.pdrpc.registry.LocalRegistry;
-import com.polarday.pdrpc.serializer.JdkSerializer;
 import com.polarday.pdrpc.serializer.Serializer;
+import com.polarday.pdrpc.serializer.SerializerFactory;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
@@ -21,7 +22,7 @@ public class HttpServerHandler implements Handler<HttpServerRequest> {
 
     @Override
     public void handle(HttpServerRequest request) {
-        final Serializer serializer = new JdkSerializer();
+        final Serializer serializer = SerializerFactory.getInstance(RpcApplication.getRpcConfig().getSerializer());
         System.out.println("Received request: " + request.method() + " " + request.uri());
         // 异步处理HTTP请求
         request.bodyHandler(body -> {

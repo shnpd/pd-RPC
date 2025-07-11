@@ -3,10 +3,11 @@ package com.polarday.pdrpc.proxy;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import com.polarday.pdrpc.RpcApplication;
 import com.polarday.pdrpc.model.RpcRequest;
 import com.polarday.pdrpc.model.RpcResponse;
-import com.polarday.pdrpc.serializer.JdkSerializer;
 import com.polarday.pdrpc.serializer.Serializer;
+import com.polarday.pdrpc.serializer.SerializerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
@@ -17,7 +18,7 @@ public class ServiceProxy implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Serializer serializer = new JdkSerializer();
+        Serializer serializer = SerializerFactory.getInstance(RpcApplication.getRpcConfig().getSerializer());
         RpcRequest rpcRequest = RpcRequest.builder()
                 .serviceName(method.getDeclaringClass().getName())
                 .methodName(method.getName())

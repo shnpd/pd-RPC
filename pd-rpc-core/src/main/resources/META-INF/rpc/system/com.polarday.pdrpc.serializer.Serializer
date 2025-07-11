@@ -1,0 +1,4 @@
+jdk=com.polarday.pdrpc.serializer.JdkSerializer
+hessian=com.polarday.pdrpc.serializer.HessianSerializer
+json=com.polarday.pdrpc.serializer.JsonSerializer
+kryo=com.polarday.pdrpc.serializer.KryoSerializer
