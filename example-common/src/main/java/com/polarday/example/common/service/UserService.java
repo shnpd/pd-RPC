@@ -6,6 +6,6 @@ public interface UserService {
     User getUser(User user);
 
     default short getNumber() {
-        return 1;
+        return (short) 1;
     }
 }

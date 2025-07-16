@@ -42,7 +42,7 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>RELEASE</version>
-            <scope>test</scope>
+            <scope>RegistryTest</scope>
         </dependency>
         <!-- 序列化 -->
         <!-- https://mvnrepository.com/artifact/com.caucho/hessian -->
@@ -62,7 +62,11 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.13.4.2</version>
         </dependency>
-
+        <dependency>
+            <groupId>io.etcd</groupId>
+            <artifactId>jetcd-core</artifactId>
+            <version>0.7.7</version>
+        </dependency>
     </dependencies>
 
 
