@@ -22,4 +22,7 @@ public interface Registry {
 
     // 服务销毁
     void destroy();
+
+    // 心跳检测（服务提供者）
+    void heartBeat();
 }
