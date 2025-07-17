@@ -25,4 +25,7 @@ public interface Registry {
 
     // 心跳检测（服务提供者）
     void heartBeat();
+
+    // 服务监听（服务消费者）
+    void watch(String serviceKey, String serviceNodeKey);
 }

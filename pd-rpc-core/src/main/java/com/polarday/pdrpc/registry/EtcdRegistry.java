@@ -1,6 +1,7 @@
 package com.polarday.pdrpc.registry;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.cron.CronUtil;
 import cn.hutool.cron.task.Task;
 import cn.hutool.json.JSONUtil;
@@ -9,6 +10,8 @@ import com.polarday.pdrpc.model.ServiceMetaInfo;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
+import io.etcd.jetcd.watch.WatchEvent;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -17,15 +20,24 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class EtcdRegistry implements Registry {
 
     private Client client;
 
     private KV kvClient;
+
     // 本机注册的节点 key 集合（用于维护续期）
     private final Set<String> localRegisterNodeKeySet = new HashSet<>();
+
     // 根节点
     private static final String ETCD_ROOT_PATH = "/rpc/";
+
+    // 注册中心缓存
+    private final RegistryServiceCache registryServiceCache = new RegistryServiceCache();
+
+    // 正在监听的key集合
+    private final Set<String> watchingKeySet = new ConcurrentHashSet<>();
 
     @Override
     public void init(RegistryConfig registryConfig) {
@@ -61,7 +73,7 @@ public class EtcdRegistry implements Registry {
 
     @Override
     public void unRegister(ServiceMetaInfo serviceMetaInfo) {
-        String registerKey = ETCD_ROOT_PATH+serviceMetaInfo.getServiceNodeKey();
+        String registerKey = ETCD_ROOT_PATH + serviceMetaInfo.getServiceNodeKey();
         kvClient.delete(ByteSequence.from(registerKey, StandardCharsets.UTF_8));
         // 从本地缓存中移除节点信息
         localRegisterNodeKeySet.remove(registerKey);
@@ -69,6 +81,12 @@ public class EtcdRegistry implements Registry {
 
     @Override
     public List<ServiceMetaInfo> serviceDiscovery(String serviceKey) {
+        // 优先从缓存获取服务
+        List<ServiceMetaInfo> cachedServiceMetaInfoList = registryServiceCache.readCache(serviceKey);
+        if (cachedServiceMetaInfoList != null) {
+            log.info("从缓存中获取 {} 服务", serviceKey);
+            return cachedServiceMetaInfoList;
+        }
         // 搜索前缀
         String searchPrefix = ETCD_ROOT_PATH + serviceKey + "/";
         try {
@@ -80,12 +98,20 @@ public class EtcdRegistry implements Registry {
                     .get()
                     .getKvs();
             // 将查询结果转换为ServiceMetaInfo列表
-            return keyValues.stream()
+            List<ServiceMetaInfo> serviceMetaInfoList = keyValues.stream()
                     .map(keyValue -> {
+                        String serviceNodeKey = keyValue.getKey().toString(StandardCharsets.UTF_8);
                         String value = keyValue.getValue().toString(StandardCharsets.UTF_8);
-                        return JSONUtil.toBean(value, ServiceMetaInfo.class);
+                        ServiceMetaInfo serviceMetaInfo = JSONUtil.toBean(value, ServiceMetaInfo.class);
+                        // 更新缓存
+                        registryServiceCache.writeCache(serviceKey, serviceNodeKey, serviceMetaInfo);
+                        // 监听key的变化
+                        watch(serviceKey, serviceNodeKey);
+                        return serviceMetaInfo;
                     })
                     .collect(Collectors.toList());
+            log.info("从etcd获取 {} 服务", serviceKey);
+            return serviceMetaInfoList;
         } catch (Exception e) {
             throw new RuntimeException("获取服务列表失败", e);
         }
@@ -96,10 +122,10 @@ public class EtcdRegistry implements Registry {
         System.out.println("当前节点下线");
         // 下线节点
         // 遍历本节点所有的key
-        for (String key: localRegisterNodeKeySet) {
+        for (String key : localRegisterNodeKeySet) {
             try {
                 kvClient.delete(ByteSequence.from(key, StandardCharsets.UTF_8)).get();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 throw new RuntimeException(key + "节点下线失败");
             }
         }
@@ -115,12 +141,12 @@ public class EtcdRegistry implements Registry {
     @Override
     public void heartBeat() {
         // 每10s执行一次续签任务
-        CronUtil.schedule("*/10 * * * * *", new Task(){
+        CronUtil.schedule("*/10 * * * * *", new Task() {
             @Override
             public void execute() {
                 // 遍历本节点所有的key
-                for(String key:localRegisterNodeKeySet) {
-                    try{
+                for (String key : localRegisterNodeKeySet) {
+                    try {
                         List<KeyValue> keyValues = kvClient.get(ByteSequence.from(key, StandardCharsets.UTF_8))
                                 .get()
                                 .getKvs();
@@ -143,5 +169,30 @@ public class EtcdRegistry implements Registry {
         // 启动定时任务
         CronUtil.setMatchSecond(true);
         CronUtil.start();
+    }
+
+    @Override
+    public void watch(String serviceKey, String serviceNodeKey) {
+        Watch watchClient = client.getWatchClient();
+        // 之前未被监听，开启监听（如果集合已有元素则add返回false）
+        boolean newWatch = watchingKeySet.add(serviceNodeKey);
+        // 获取serviceNodeKey对应的serviceKey
+        if (newWatch) {
+            watchClient.watch(ByteSequence.from(serviceNodeKey, StandardCharsets.UTF_8), watchResponse -> {
+                for (WatchEvent event : watchResponse.getEvents()) {
+                    switch (event.getEventType()) {
+                        // key 删除时触发
+                        case DELETE:
+                            // 清理注册服务缓存
+                            log.info("watch删除事件触发 {}:{}", serviceKey, serviceNodeKey);
+                            registryServiceCache.removeCache(serviceKey, serviceNodeKey);
+                            break;
+                        case PUT:
+                        default:
+                            break;
+                    }
+                }
+            });
+        }
     }
 }
