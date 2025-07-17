@@ -67,7 +67,7 @@ public class EtcdRegistry implements Registry {
         PutOption putOption = PutOption.builder().withLeaseId(leaseId).build();
         kvClient.put(key, value, putOption).get();
 
-        // 添加节点信息到本地缓存
+        // 记录本节点注册的key的集合
         localRegisterNodeKeySet.add(registerKey);
     }
 

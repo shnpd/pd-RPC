@@ -1,1 +1,2 @@
 etcd=com.polarday.pdrpc.registry.EtcdRegistry
+zookeeper=com.polarday.pdrpc.registry.ZooKeeperRegistry
