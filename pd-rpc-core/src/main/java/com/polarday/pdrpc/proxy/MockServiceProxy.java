@@ -20,7 +20,7 @@ public class MockServiceProxy implements InvocationHandler {
         if (type.isPrimitive()) {
             if (type == boolean.class) {
                 return false;
-            }else if (type == byte.class) {
+            } else if (type == byte.class) {
                 return (byte) 0;
             } else if (type == short.class) {
                 return (short) 0;

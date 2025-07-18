@@ -8,8 +8,7 @@ import com.polarday.pdrpc.model.ServiceMetaInfo;
 import com.polarday.pdrpc.registry.LocalRegistry;
 import com.polarday.pdrpc.registry.Registry;
 import com.polarday.pdrpc.registry.RegistryFactory;
-import com.polarday.pdrpc.server.HttpServer;
-import com.polarday.pdrpc.server.VertxHttpServer;
+import com.polarday.pdrpc.server.tcp.VertxTcpServer;
 
 public class ProviderExample {
 
@@ -32,8 +31,8 @@ public class ProviderExample {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        // 启动web服务器
-        HttpServer httpServer = new VertxHttpServer();
-        httpServer.doStart(RpcApplication.getRpcConfig().getServerPort());
+        // 启动TCP服务
+        VertxTcpServer vertxTcpServer = new VertxTcpServer();
+        vertxTcpServer.doStart(RpcApplication.getRpcConfig().getServerPort());
     }
 }
