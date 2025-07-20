@@ -1,5 +1,6 @@
 package com.polarday.pdrpc.config;
 
+import com.polarday.pdrpc.fault.retry.RetryStrategyKeys;
 import com.polarday.pdrpc.loadbalancer.LoadBalancerKeys;
 import com.polarday.pdrpc.serializer.SerializerKeys;
 import lombok.Data;
@@ -25,5 +26,8 @@ public class RpcConfig {
 
     // 负载均衡器配置
     private String loadBalancer = LoadBalancerKeys.ROUND_ROBIN;
+
+    // 重试策略
+    private String retryStrategy = RetryStrategyKeys.FIXED_INTERVAL;
 
 }

@@ -1,0 +1,2 @@
+no=com.polarday.pdrpc.fault.retry.NoRetryStrategy
+fixedInterval=com.polarday.pdrpc.fault.retry.FixedIntervalRetryStrategy

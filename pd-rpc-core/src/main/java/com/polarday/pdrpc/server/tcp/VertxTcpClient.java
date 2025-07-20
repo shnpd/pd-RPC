@@ -27,6 +27,8 @@ public class VertxTcpClient {
                 result -> {
                     if (!result.succeeded()) {
                         System.err.println("Failed to connect to TCP server: " + result.cause());
+                        // 将异常传递给future
+                        responseFuture.completeExceptionally(new RuntimeException("Failed to connect to TCP server"));
                         return;
                     }
                     NetSocket socket = result.result();
@@ -62,9 +64,14 @@ public class VertxTcpClient {
                     );
                     socket.handler(bufferHandlerWrapper);
                 });
-        RpcResponse rpcResponse = responseFuture.get();
-        netClient.close();
-        return rpcResponse;
+        try {
+            // 阻塞并抛出异常
+            RpcResponse rpcResponse = responseFuture.get();
+            netClient.close();
+            return rpcResponse;
+        } catch (Exception e) {
+            throw new RuntimeException("请求失败: " + e.getMessage(), e);
+        }
     }
 
     public void start() {
