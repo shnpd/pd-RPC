@@ -1,6 +1,7 @@
 package com.polarday.pdrpc.config;
 
 import com.polarday.pdrpc.fault.retry.RetryStrategyKeys;
+import com.polarday.pdrpc.fault.tolerant.TolerantStrategyKeys;
 import com.polarday.pdrpc.loadbalancer.LoadBalancerKeys;
 import com.polarday.pdrpc.serializer.SerializerKeys;
 import lombok.Data;
@@ -29,5 +30,8 @@ public class RpcConfig {
 
     // 重试策略
     private String retryStrategy = RetryStrategyKeys.FIXED_INTERVAL;
+
+    // 容错策略
+    private String tolerantStrategy = TolerantStrategyKeys.FAIL_FAST;
 
 }

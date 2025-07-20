@@ -1,0 +1,4 @@
+failBack=com.polarday.pdrpc.fault.tolerant.FailBackTolerantStrategy
+failFast=com.polarday.pdrpc.fault.tolerant.FailFastTolerantStrategy
+failOver=com.polarday.pdrpc.fault.tolerant.FailOverTolerantStrategy
+failSafe=com.polarday.pdrpc.fault.tolerant.FailSafeTolerantStrategy
