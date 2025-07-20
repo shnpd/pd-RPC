@@ -5,6 +5,8 @@ import cn.hutool.core.collection.CollUtil;
 import com.polarday.pdrpc.RpcApplication;
 import com.polarday.pdrpc.config.RpcConfig;
 import com.polarday.pdrpc.constant.RpcConstant;
+import com.polarday.pdrpc.loadbalancer.LoadBalancer;
+import com.polarday.pdrpc.loadbalancer.LoadBalancerFactory;
 import com.polarday.pdrpc.model.RpcRequest;
 import com.polarday.pdrpc.model.RpcResponse;
 import com.polarday.pdrpc.model.ServiceMetaInfo;
@@ -14,7 +16,9 @@ import com.polarday.pdrpc.server.tcp.VertxTcpClient;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 // 动态代理
 public class ServiceProxy implements InvocationHandler {
@@ -39,8 +43,12 @@ public class ServiceProxy implements InvocationHandler {
             if (CollUtil.isEmpty(serviceMetaInfoList)) {
                 throw new RuntimeException("暂无服务地址");
             }
-            // 暂时先取第一个
-            ServiceMetaInfo selectedServiceMetaInfo = serviceMetaInfoList.get(0);
+            // 负载均衡
+            LoadBalancer loadBalancer = LoadBalancerFactory.getInstance(rpcConfig.getLoadBalancer());
+            // 将请求的方法名作为负载均衡的参数
+            Map<String,Object> requestParams = new HashMap<>();
+            requestParams.put("methodName", rpcRequest.getMethodName());
+            ServiceMetaInfo selectedServiceMetaInfo = loadBalancer.select(requestParams, serviceMetaInfoList);
             // 发送TCP请求
             RpcResponse rpcResponse = VertxTcpClient.doRequest(rpcRequest, selectedServiceMetaInfo);
             return rpcResponse.getData();

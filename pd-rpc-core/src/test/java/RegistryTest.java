@@ -69,4 +69,9 @@ public class RegistryTest {
         // 阻塞1分钟
         Thread.sleep(60 * 1000L);
     }
+
+    @Test
+    public void test() {
+        List<String>
+    }
 }

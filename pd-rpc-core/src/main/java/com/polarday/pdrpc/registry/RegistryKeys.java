@@ -1,6 +1,6 @@
 package com.polarday.pdrpc.registry;
 
-public class RegistryKeys {
+public interface RegistryKeys {
     String ETCD = "etcd";
     String ZOOKEEPER = "zookeeper";
 }

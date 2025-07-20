@@ -1,5 +1,6 @@
 package com.polarday.pdrpc.config;
 
+import com.polarday.pdrpc.loadbalancer.LoadBalancerKeys;
 import com.polarday.pdrpc.serializer.SerializerKeys;
 import lombok.Data;
 
@@ -16,9 +17,13 @@ public class RpcConfig {
 
     private boolean mock = false;
 
+    // 序列化器配置
     private String serializer = SerializerKeys.JDK;
 
     // 注册中心配置
     private RegistryConfig registryConfig = new RegistryConfig();
+
+    // 负载均衡器配置
+    private String loadBalancer = LoadBalancerKeys.ROUND_ROBIN;
 
 }
