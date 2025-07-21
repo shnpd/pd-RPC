@@ -18,6 +18,7 @@ import java.lang.reflect.Method;
 // 2. 根据服务名称从本地注册器中获取到对应的服务实现类
 // 3. 通过反射调用方法，得到返回结果
 // 4. 将返回结果序列化，并写入到响应中
+@Deprecated
 public class HttpServerHandler implements Handler<HttpServerRequest> {
 
     @Override
